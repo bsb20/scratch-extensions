@@ -1,44 +1,142 @@
-/* Extension demonstrating a hat block */
-/* Sayamindu Dasgupta <sayamindu@media.mit.edu>, May 2014 */
-
-new (function() {
+new(function() {
     var ext = this;
-    var alarm_went_off = false; // This becomes true after the alarm goes off
+    MBTA_URL = "http://realtime.mbta.com/developer/api/v2/";
 
-    // Cleanup function when the extension is unloaded
-    ext._shutdown = function() {};
+    ext.next_inbound = function(callback) {
+        request_params = {
+            api_key: "wX9NwuHnZU2ToO7GmGR9uw",
+            stop: "70069",
+            max_time: 60,
+            format: "json"
+        };
+        $.ajax({
+            url: MBTA_URL + "schedulebystop",
+            data: request_params,
+            success: function(data, tStatus, xhr) {
+                console.log(data + " " + ":: DATA");
+                callback(data["mode"][0]["route"][0]["direction"][0]["trip"][0]["trip_name"]);
+            },
+            error: function(xhr, tStatus, error) {
+                console.log(data.message);
+                callback("ERROR");
+            },
+            complete: function(xhr, tStatus) {
+                console.log(tStatus);
+            }
 
-    // Status reporting code
-    // Use this to report missing hardware, plugin or unsupported browser
+        });
+
+    };
+
+
+    ext.next_outbound = function(callback) {
+
+        request_params = {
+            api_key: "wX9NwuHnZU2ToO7GmGR9uw",
+            stop: "70070",
+            max_time: 60,
+            format: "json"
+        };
+        $.ajax({
+            url: MBTA_URL + "schedulebystop",
+            data: request_params,
+            success: function(data, tStatus, xhr) {
+                console.log(data + " " + ":: DATA");
+                callback(data["mode"][0]["route"][0]["direction"][0]["trip"][0]["trip_name"]);
+            },
+            error: function(xhr, tStatus, error) {
+                console.log(data.message);
+                callback("ERROR");
+            },
+            complete: function(xhr, tStatus) {
+                console.log(tStatus);
+            }
+
+        });
+
+    };
+
+
+    ext.next_outbound_prediction = function(callback) {
+
+        request_params = {
+            api_key: "wX9NwuHnZU2ToO7GmGR9uw",
+            stop: "70070",
+            format: "json"
+        };
+        $.ajax({
+            url: MBTA_URL + "predictionsbystop",
+            data: request_params,
+            success: function(data, tStatus, xhr) {
+                console.log(data + " " + ":: DATA");
+                callback(data["mode"][0]["route"][0]["direction"][0]["trip"][0]["pre_away"] / 60);
+            },
+            error: function(xhr, tStatus, error) {
+                console.log(data.message);
+                callback("ERROR");
+            },
+            complete: function(xhr, tStatus) {
+                console.log(tStatus);
+            }
+
+        });
+
+    };
+
+
+    ext.next_inbound_prediction = function(callback) {
+
+        request_params = {
+            api_key: "wX9NwuHnZU2ToO7GmGR9uw",
+            stop: "70069",
+            format: "json"
+        };
+        $.ajax({
+            url: MBTA_URL + "predictionsbystop",
+            data: request_params,
+            success: function(data, tStatus, xhr) {
+                console.log(data + " " + ":: DATA");
+                callback(data["mode"][0]["route"][0]["direction"][0]["trip"][0]["pre_away"] / 60);
+            },
+            error: function(xhr, tStatus, error) {
+                console.log(data.message);
+                callback("ERROR");
+            },
+            complete: function(xhr, tStatus) {
+                console.log(tStatus);
+            }
+
+        });
+
+    };
+
+
+
     ext._getStatus = function() {
-        return {status: 2, msg: 'Ready'};
+        if (window.SpeechSynthesisUtterance === undefined) {
+            return {
+                status: 1,
+                msg: 'Your browser does not support text to speech. Try using Google Chrome or Safari.'
+            };
+        }
+        return {
+            status: 2,
+            msg: 'Ready'
+        };
     };
 
-    ext.set_alarm = function(time) {
-       window.setTimeout(function() {
-           alarm_went_off = true;
-       }, time*1000);
-    };
-
-    ext.when_alarm = function() {
-       // Reset alarm_went_off if it is true, and return true
-       // otherwise, return false.
-       if (alarm_went_off === true) {
-           alarm_went_off = false;
-           return true;
-       }
-
-       return false;
-    };
-
-    // Block and block menu descriptions
     var descriptor = {
         blocks: [
-            ['', 'run alarm after %n seconds', 'set_alarm', '2'],
-            ['h', 'when alarm goes off', 'when_alarm'],
-        ]
+            //['', 'set voice to %m.voices', 'set_voice', ''],
+            ['R', 'Get next inbound train at Central Sq.', 'next_inbound'],
+            ['R', 'Get next outbound train at Central Sq.', 'next_outbound'],
+            ['R', 'Get next inbound train prediction at Central Sq.', 'next_inbound_prediction'],
+            ['R', 'Get next outbound train prediction at Central Sq.', 'next_outbound_prediction']
+
+        ],
+        menus: {}
     };
 
-    // Register the extension
-    ScratchExtensions.register('Alarm extension', descriptor, ext);
+    ScratchExtensions.register('Text to Speech', descriptor, ext);
+
 })();
